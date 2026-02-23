@@ -5,7 +5,7 @@
 ### 1.1 命令行接口 (CLI)
 
 ```bash
-cmp [OPTIONS] [PATH]
+music [OPTIONS] [PATH]
 ```
 
 #### 参数
@@ -33,19 +33,19 @@ cmp [OPTIONS] [PATH]
 
 ```bash
 # 播放单个文件
-cmp song.mp3
+music song.mp3
 
 # 播放文件夹
-cmp ~/Music/
+music ~/Music/
 
 # 使用霓虹主题播放
-cmp -t neon playlist.m3u
+music -t neon playlist.m3u
 
 # 禁用可视化，以波形模式播放
-cmp --no-visualizer ~/Music/
+music --no-visualizer ~/Music/
 
 # 指定配置文件启动
-cmp -c ./my_config.yaml song.mp3
+music -c ./my_config.yaml song.mp3
 ```
 
 ### 1.2 交互命令
@@ -185,7 +185,7 @@ interface:
 advanced:
   log_level: "info"               # debug, info, warning, error
   log_file: null                  # 日志文件路径
-  cache_dir: "~/.cache/cmp"
+  cache_dir: "~/.cache/music"
   
   # 插件设置
   plugins:
@@ -197,22 +197,22 @@ advanced:
 
 ```bash
 # 查看当前配置
-cmp config show
+music config show
 
 # 编辑配置
-cmp config edit
+music config edit
 
 # 重置配置为默认
-cmp config reset
+music config reset
 
 # 验证配置
-cmp config validate
+music config validate
 
 # 导入配置
-cmp config import <path>
+music config import <path>
 
 # 导出配置
-cmp config export <path>
+music config export <path>
 ```
 
 ---
@@ -223,25 +223,25 @@ cmp config export <path>
 
 ```bash
 # 列出所有可用主题
-cmp theme list
+music theme list
 
 # 查看主题详情
-cmp theme info <name>
+music theme info <name>
 
 # 预览主题
-cmp theme preview <name>
+music theme preview <name>
 
 # 安装主题
-cmp theme install <path-or-url>
+music theme install <path-or-url>
 
 # 卸载主题
-cmp theme uninstall <name>
+music theme uninstall <name>
 
 # 创建主题模板
-cmp theme create <name>
+music theme create <name>
 
 # 验证主题
-cmp theme validate <path>
+music theme validate <path>
 ```
 
 ### 3.2 程序化主题接口
@@ -308,25 +308,25 @@ print(current.colors.accent)
 
 ```bash
 # 创建播放列表
-cmp playlist create <name>
+music playlist create <name>
 
 # 添加歌曲到播放列表
-cmp playlist add <playlist> <path>
+music playlist add <playlist> <path>
 
 # 从播放列表移除
-cmp playlist remove <playlist> <index>
+music playlist remove <playlist> <index>
 
 # 查看播放列表内容
-cmp playlist show <playlist>
+music playlist show <playlist>
 
 # 合并播放列表
-cmp playlist merge <playlist1> <playlist2> <output>
+music playlist merge <playlist1> <playlist2> <output>
 
 # 转换格式
-cmp playlist convert <input> <output> --format <json|m3u>
+music playlist convert <input> <output> --format <json|m3u>
 
 # 导出播放列表
-cmp playlist export <name> --format <json|m3u>
+music playlist export <name> --format <json|m3u>
 ```
 
 ### 4.3 程序化播放列表接口
@@ -371,16 +371,16 @@ recent = pm.get_recently_played(limit=10)
 
 ```bash
 # 切换可视化类型
-cmp visualizer set <type>
+music visualizer set <type>
 
 # 调整灵敏度
-cmp visualizer sensitivity <0.1-3.0>
+music visualizer sensitivity <0.1-3.0>
 
 # 设置刷新率
-cmp visualizer fps <15|30|60>
+music visualizer fps <15|30|60>
 
 # 测试可视化
-cmp visualizer test
+music visualizer test
 ```
 
 ### 5.3 程序化可视化接口

@@ -139,15 +139,15 @@ themes/
 ### 3.3 命令行参数
 ```bash
 # 基本使用
-cmp <file.mp3>                    # 播放单个文件
-cmp <playlist.m3u>                # 加载播放列表
-cmp /path/to/music/folder         # 加载文件夹
+music <file.mp3>                    # 播放单个文件
+music <playlist.m3u>                # 加载播放列表
+music /path/to/music/folder         # 加载文件夹
 
 # 选项
-cmp --theme <theme_name>          # 指定主题启动
-cmp --no-visualizer               # 禁用可视化
-cmp --config <config_path>        # 指定配置文件
-cmp --help                        # 显示帮助
+music --theme <theme_name>          # 指定主题启动
+music --no-visualizer               # 禁用可视化
+music --config <config_path>        # 指定配置文件
+music --help                        # 显示帮助
 ```
 
 ---
@@ -239,7 +239,7 @@ cli_music_player/
 
 ### 7.1 配置文件位置
 ```
-~/.config/cmp/
+~/.config/music/
 ├── config.yaml          # 主配置文件
 ├── playlists/           # 播放列表存储
 ├── themes/              # 用户自定义主题

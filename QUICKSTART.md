@@ -19,7 +19,7 @@ sudo apt-get install portaudio19-dev python3-pyaudio
 sudo dnf install portaudio-devel
 ```
 
-### 2. Install CMP
+### 2. Install Music Player
 
 ```bash
 cd ~/works2/cli-music-player
@@ -31,20 +31,20 @@ Or using requirements.txt:
 pip install -r requirements.txt
 ```
 
-### 3. Run CMP
+### 3. Run Music Player
 
 ```bash
 # Play a single file
-cmp song.mp3
+music song.mp3
 
 # Play a folder
-cmp ~/Music/
+music ~/Music/
 
 # Play with neon theme
-cmp -t neon song.mp3
+music -t neon song.mp3
 
 # Enable shuffle
-cmp -s ~/Music/
+music -s ~/Music/
 ```
 
 ## Controls
@@ -69,8 +69,8 @@ cmp -s ~/Music/
 
 Built-in themes: `default`, `neon`, `minimal`, `retro`, `ocean`
 
-Switch with `T` key or `cmp -t <theme>`
+Switch with `T` key or `music -t <theme>`
 
 ## Configuration
 
-Edit `~/.config/cmp/config.yaml` to customize settings.
+Edit `~/.config/music/config.yaml` to customize settings.

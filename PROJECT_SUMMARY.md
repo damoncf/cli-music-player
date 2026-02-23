@@ -1,4 +1,4 @@
-# CMP v0.1.0 - 开发完成
+# Music v0.1.0 - 开发完成
 
 ## 项目统计
 
@@ -98,9 +98,9 @@ cmp/
 pip install -e .
 
 # 播放音乐
-cmp song.mp3
-cmp ~/Music/
-cmp -t neon playlist.m3u
+music song.mp3
+music ~/Music/
+music -t neon playlist.m3u
 ```
 
 ## 待扩展功能 (未来版本)

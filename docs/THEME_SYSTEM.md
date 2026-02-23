@@ -347,7 +347,7 @@ colors:
 
 3. **测试主题**
    ```bash
-   cmp --theme my_theme
+   music --theme my_theme
    ```
 
 4. **分享主题**

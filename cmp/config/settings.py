@@ -80,9 +80,9 @@ class ConfigManager:
     """Manages configuration loading and saving."""
     
     def __init__(self):
-        self.config_dir = Path.home() / ".config" / "cmp"
+        self.config_dir = Path.home() / ".config" / "music"
         self.config_file = self.config_dir / "config.yaml"
-        self.cache_dir = Path.home() / ".cache" / "cmp"
+        self.cache_dir = Path.home() / ".cache" / "music"
         self._config: Optional[Config] = None
     
     @property

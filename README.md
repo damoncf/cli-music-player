@@ -1,4 +1,4 @@
-# CMP - CLI Music Player
+# Music - CLI Music Player
 
 A beautiful terminal-based music player with real-time audio visualization and customizable themes.
 
@@ -39,19 +39,19 @@ pip install -e .
 
 ```bash
 # Play a single file
-cmp song.mp3
+music song.mp3
 
 # Play a folder
-cmp ~/Music/
+music ~/Music/
 
 # Play a playlist
-cmp playlist.m3u
+music playlist.m3u
 
 # Use a specific theme
-cmp -t neon song.mp3
+music -t neon song.mp3
 
 # Start with shuffle enabled
-cmp -s ~/Music/
+music -s ~/Music/
 ```
 
 ### Keyboard Shortcuts
@@ -74,7 +74,7 @@ cmp -s ~/Music/
 
 ## Themes
 
-CMP includes 5 built-in themes:
+Music player includes 5 built-in themes:
 
 - **default**: Classic terminal theme
 - **neon**: Cyberpunk neon colors
@@ -82,11 +82,11 @@ CMP includes 5 built-in themes:
 - **retro**: Vintage amber monitor
 - **ocean**: Deep ocean blue
 
-Switch themes by pressing `T` or start with `cmp -t <theme>`.
+Switch themes by pressing `T` or start with `music -t <theme>`.
 
 ## Configuration
 
-Configuration is stored in `~/.config/cmp/config.yaml`:
+Configuration is stored in `~/.config/music/config.yaml`:
 
 ```yaml
 player:
