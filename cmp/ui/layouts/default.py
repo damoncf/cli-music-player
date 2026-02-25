@@ -93,7 +93,7 @@ class DefaultLayout(Layout):
             theme.colors.playlist_current,
             theme.colors.playlist_selected
         )
-        screen.playlist_widget.display = False
+        screen.playlist_widget.display = True
         playlist_container = Container(screen.playlist_widget, classes="playlist-container")
         widgets.append(playlist_container)
         

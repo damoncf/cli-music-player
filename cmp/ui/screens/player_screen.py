@@ -40,7 +40,7 @@ class PlayerScreen(Screen):
     def __init__(self, playlist: Playlist, **kwargs):
         super().__init__(**kwargs)
         self.playlist = playlist
-        self.show_playlist = False
+        self.show_playlist = True
         self._custom_layout_widgets = []
     
     def compose(self):
