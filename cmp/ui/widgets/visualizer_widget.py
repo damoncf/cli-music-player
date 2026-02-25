@@ -1,24 +1,20 @@
 """Visualizer widget."""
 from textual.widgets import Static
 from textual.reactive import reactive
-from textual.color import Color
 import numpy as np
 from typing import Optional
-from ...visualizer.spectrum import SpectrumVisualizer, CompactSpectrumVisualizer
-from ...visualizer.waveform import SimpleWaveformVisualizer
+
+from ...visualizer.manager import visualizer_manager
 
 
 class VisualizerWidget(Static):
-    """Audio visualization widget."""
+    """Audio visualization widget using the visualizer manager."""
     
     enabled = reactive(True)
     visualizer_type = reactive("spectrum")
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._spectrum = SpectrumVisualizer(bar_count=32, smoothing=0.3)
-        self._compact_spectrum = CompactSpectrumVisualizer(bar_count=64, smoothing=0.3)
-        self._waveform = SimpleWaveformVisualizer(smoothing=0.3)
         self._audio_data: Optional[np.ndarray] = None
         self._color = "#00ff00"
         self._bg_color = "#000000"
@@ -36,7 +32,7 @@ class VisualizerWidget(Static):
     
     def refresh_visualization(self):
         """Refresh the visualization display."""
-        if self._audio_data is None:
+        if self._audio_data is None or not self.enabled:
             self.update("")
             return
         
@@ -44,20 +40,17 @@ class VisualizerWidget(Static):
         height = self.size.height if self.size else 8
         
         try:
-            if self.visualizer_type == "spectrum":
-                data = self._spectrum.process(self._audio_data)
-                lines = self._spectrum.render(data, width, height)
-            elif self.visualizer_type == "waveform":
-                data = self._waveform.process(self._audio_data)
-                lines = self._waveform.render(data, width, height)
+            # Use the visualizer manager to process and render
+            visualizer = visualizer_manager.current
+            if visualizer:
+                data = visualizer.process(self._audio_data)
+                lines = visualizer.render(data, width, height)
+                content = "\n".join(lines[:height])
+                self.update(content)
             else:
-                data = self._compact_spectrum.process(self._audio_data)
-                lines = self._compact_spectrum.render(data, width, 1)
-            
-            content = "\n".join(lines[:height])
-            self.update(content)
+                self.update("")
         except Exception:
-            pass
+            self.update("")
     
     def watch_enabled(self, enabled: bool):
         """Handle enabled state change."""
@@ -71,3 +64,4 @@ class VisualizerWidget(Static):
     def set_type(self, vtype: str):
         """Set visualizer type."""
         self.visualizer_type = vtype
+        visualizer_manager.switch_to(vtype)

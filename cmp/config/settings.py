@@ -34,6 +34,10 @@ class VisualizerConfig(BaseModel):
     sensitivity: float = Field(default=1.0, ge=0.1, le=3.0)
     bar_count: int = Field(default=32, ge=8, le=128)
     smoothing: float = Field(default=0.3, ge=0.0, le=1.0)
+    available_types: List[str] = Field(default_factory=lambda: [
+        "spectrum", "circle", "stereo", "mirror", "waveform", 
+        "oscilloscope", "compact", "symmetry"
+    ])
 
 
 class ThemeConfig(BaseModel):
@@ -63,6 +67,10 @@ class InterfaceConfig(BaseModel):
     """Interface configuration."""
     show_notifications: bool = True
     compact_mode: bool = False
+    layout: str = "default"
+    auto_layout: bool = True
+    min_width_for_split: int = 120
+    compact_height_threshold: int = 20
 
 
 class Config(BaseModel):

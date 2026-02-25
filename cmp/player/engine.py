@@ -58,6 +58,7 @@ class AudioEngine:
         
         self._callbacks: List[Callable] = []
         self._position_callbacks: List[Callable] = []
+        self._end_callbacks: List[Callable] = []
         
         self._lock = threading.Lock()
     
@@ -85,6 +86,15 @@ class AudioEngine:
     def register_position_callback(self, callback: Callable[[float, float], None]):
         """Register position update callback."""
         self._position_callbacks.append(callback)
+    
+    def register_end_callback(self, callback: Callable[[], None]):
+        """Register track end callback."""
+        self._end_callbacks.append(callback)
+    
+    def unregister_end_callback(self, callback: Callable[[], None]):
+        """Unregister track end callback."""
+        if callback in self._end_callbacks:
+            self._end_callbacks.remove(callback)
     
     @property
     def state(self) -> PlaybackState:
@@ -228,7 +238,13 @@ class AudioEngine:
                 data = self._sound_file.read(self.CHUNK_SIZE, dtype='float32')
                 
                 if len(data) == 0:
-                    # End of file
+                    # End of file - notify callbacks
+                    self._state = PlaybackState.IDLE
+                    for callback in self._end_callbacks:
+                        try:
+                            callback()
+                        except Exception:
+                            pass
                     self._stop_event.wait(0.1)
                     continue
                 

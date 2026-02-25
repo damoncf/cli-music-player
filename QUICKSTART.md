@@ -49,6 +49,7 @@ music -s ~/Music/
 
 ## Controls
 
+### Playback
 | Key | Action |
 |-----|--------|
 | `Space` | Play/Pause |
@@ -56,11 +57,45 @@ music -s ~/Music/
 | `P` | Previous |
 | `←/→` | Seek -10s/+10s |
 | `↑/↓` | Volume -/+ |
+
+### Visualizations
+| Key | Action |
+|-----|--------|
+| `V` | Next visualizer |
+| `Shift+V` | Previous visualizer |
+| `Ctrl+V` | Visualizer menu |
+
+**Available Visualizers:**
+- `spectrum` - Classic frequency bars
+- `circle` - Circular radial display
+- `stereo` - Left/Right channel separation
+- `mirror` - Symmetric mirror display
+- `oscilloscope` - Retro oscilloscope style
+- `waveform` - Time-domain waveform
+- `symmetry` - Center-symmetric spectrum
+- `compact` - Single-line spectrum
+
+### Layouts
+| Key | Action |
+|-----|--------|
+| `Shift+L` | Next layout |
+| `Ctrl+L` | Layout menu |
+
+**Available Layouts:**
+- `default` - Balanced view
+- `compact` - Small terminal optimized
+- `visual` - Maximized visualizer
+- `playlist` - Playlist-focused
+- `minimal` - Single-line display
+- `split` - Wide screen side-by-side
+
+### Other Controls
+| Key | Action |
+|-----|--------|
 | `M` | Mute |
 | `S` | Shuffle |
 | `R` | Repeat (none/all/one) |
 | `T` | Switch theme |
-| `V` | Switch visualizer |
 | `L` | Toggle playlist |
 | `Q` | Quit |
 | `?` | Help |
@@ -73,4 +108,25 @@ Switch with `T` key or `music -t <theme>`
 
 ## Configuration
 
-Edit `~/.config/music/config.yaml` to customize settings.
+Edit `~/.config/music/config.yaml` to customize settings:
+
+```yaml
+player:
+  default_volume: 70
+  
+visualizer:
+  type: spectrum  # or circle, stereo, mirror, etc.
+  fps: 30
+  
+interface:
+  layout: default  # or compact, visual, playlist, etc.
+  auto_layout: true
+```
+
+## Tips
+
+1. **Small Terminal?** Use `compact` layout or press `Ctrl+L` to select it
+2. **Want Visuals?** Use `visual` layout for maximum visualizer area
+3. **Managing Playlist?** Use `playlist` layout for easy track selection
+4. **Background Play?** Use `minimal` layout for single-line display
+5. **Wide Screen?** Use `split` layout for visualizer + playlist side-by-side
