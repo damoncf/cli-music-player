@@ -36,22 +36,8 @@ def load_files_to_playlist(playlist: Playlist, paths: list[str]):
 
 @click.group(invoke_without_command=True)
 @click.pass_context
-@click.argument("paths", nargs=-1, type=click.Path(exists=True))
-@click.option("--theme", "-t", default=None, help="Theme name")
-@click.option("--no-visualizer", is_flag=True, help="Disable visualizer")
-@click.option("--volume", "-v", default=None, type=int, help="Initial volume (0-100)")
-@click.option("--shuffle", "-s", is_flag=True, help="Enable shuffle")
-@click.option("--loop", "-l", default="none", type=click.Choice(["none", "all", "one"]), help="Loop mode")
 @click.version_option(version="0.1.0", prog_name="music")
-def main(
-    ctx: click.Context,
-    paths: tuple[str],
-    theme: str | None,
-    no_visualizer: bool,
-    volume: int | None,
-    shuffle: bool,
-    loop: str,
-):
+def main(ctx: click.Context):
     """
     Music - CLI Music Player
     
@@ -64,10 +50,9 @@ def main(
         music daemon --port 8080
         music mcp
     """
-    # If no subcommand, run the default player
+    # If no subcommand, run the default player with empty paths
     if ctx.invoked_subcommand is None:
-        ctx.invoke(play, paths=paths, theme=theme, no_visualizer=no_visualizer,
-                   volume=volume, shuffle=shuffle, loop=loop)
+        ctx.invoke(play, paths=())
 
 
 @main.command()
@@ -77,7 +62,9 @@ def main(
 @click.option("--volume", "-v", default=None, type=int, help="Initial volume (0-100)")
 @click.option("--shuffle", "-s", is_flag=True, help="Enable shuffle")
 @click.option("--loop", "-l", default="none", type=click.Choice(["none", "all", "one"]), help="Loop mode")
+@click.pass_context
 def play(
+    ctx: click.Context,
     paths: tuple[str],
     theme: str | None,
     no_visualizer: bool,
