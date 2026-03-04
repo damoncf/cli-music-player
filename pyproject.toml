@@ -3,7 +3,7 @@ name = "cmp"
 version = "0.1.0"
 description = "CLI Music Player - A terminal-based music player with visualizations"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "CLI Music Player"}
