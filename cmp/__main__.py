@@ -42,7 +42,7 @@ def load_files_to_playlist(playlist: Playlist, paths: list[str]):
 @click.option("--volume", "-v", default=None, type=int, help="Initial volume (0-100)")
 @click.option("--shuffle", "-s", is_flag=True, help="Enable shuffle")
 @click.option("--loop", "-l", default="none", type=click.Choice(["none", "all", "one"]), help="Loop mode")
-@click.version_option(version="0.1.0", prog_name="cmp")
+@click.version_option(version="0.1.0", prog_name="music")
 def main(
     ctx: click.Context,
     paths: tuple[str],
@@ -53,16 +53,16 @@ def main(
     loop: str,
 ):
     """
-    CMP - CLI Music Player
+    Music - CLI Music Player
     
     A terminal-based music player with audio visualization.
     
     Examples:
-        cmp song.mp3
-        cmp ~/Music/
-        cmp -t neon playlist.m3u
-        cmp daemon --port 8080
-        cmp mcp
+        music song.mp3
+        music ~/Music/
+        music -t neon playlist.m3u
+        music daemon --port 8080
+        music mcp
     """
     # If no subcommand, run the default player
     if ctx.invoked_subcommand is None:

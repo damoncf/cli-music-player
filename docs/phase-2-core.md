@@ -267,7 +267,7 @@ prompts = {
 
 ```python
 # Target API
-from cmp import MusicPlayer
+from music import MusicPlayer
 
 async with MusicPlayer() as player:
     await player.playlist.add("~/Music/")
@@ -336,11 +336,11 @@ async with player.playlist.batch() as batch:
 
 ```python
 # Headless mode
-uv run python -m cmp --daemon --port 8080 --mcp
+uv run python -m music --daemon --port 8080 --mcp
 
 # Client usage
-uv run python -m cmp client play ~/Music/song.mp3
-uv run python -m cmp client status
+uv run python -m music client play ~/Music/song.mp3
+uv run python -m music client status
 ```
 
 ### 4.2 CLI Improvements
@@ -353,13 +353,13 @@ uv run python -m cmp client status
 
 ```bash
 # JSON output for scripting
-cmp --json status | jq '.current_track.title'
+music --json status | jq '.current_track.title'
 
 # Pipe support
-cmp search "rock" | cmp add -
+music search "rock" | music add -
 
 # Non-interactive
-cmp --no-ui play ~/Music/album.mp3
+music --no-ui play ~/Music/album.mp3
 ```
 
 ---
