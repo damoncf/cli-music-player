@@ -2,6 +2,8 @@
 import asyncio
 import json
 import logging
+import threading
+import time
 from typing import Optional, Callable, Any
 from pathlib import Path
 from datetime import datetime
@@ -45,9 +47,14 @@ class DaemonServer:
         
         self._ws_clients: list[web.WebSocketResponse] = []
         self._running = False
+        self._track_ended = False
+        self._monitor_thread = None
         
         # Setup event forwarding to WebSocket clients
         self._setup_event_forwarding()
+        
+        # Setup auto-play next track when current track ends
+        self._setup_auto_play_next()
     
     def _setup_routes(self):
         """Setup HTTP routes."""
@@ -85,6 +92,46 @@ class DaemonServer:
         event_bus = EventBus()
         for event_type in EventType:
             event_bus.subscribe_async(event_type, forward_event)
+    
+    def _setup_auto_play_next(self):
+        """Setup auto-play next track when current track ends."""
+        def on_track_end():
+            # This runs in the decoder thread
+            # Signal that track ended - the monitor will handle next track
+            self._track_ended = True
+        
+        self.audio_engine.register_end_callback(on_track_end)
+    
+    def _start_monitor(self):
+        """Start the monitor thread for auto-play next track."""
+        self._monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
+        self._monitor_thread.start()
+    
+    def _monitor_loop(self):
+        """Monitor thread loop - handles auto-play next track."""
+        while self._running:
+            time.sleep(0.5)
+            
+            if self._track_ended:
+                self._track_ended = False
+                
+                # Handle auto-play next
+                if self.playlist.repeat == RepeatMode.NONE:
+                    if self.playlist.current_index < len(self.playlist) - 1:
+                        track = self.playlist.next()
+                        if track:
+                            self.audio_engine.load(track)
+                            self.audio_engine.play()
+                elif self.playlist.repeat == RepeatMode.ALL:
+                    track = self.playlist.next()
+                    if track:
+                        self.audio_engine.load(track)
+                        self.audio_engine.play()
+                elif self.playlist.repeat == RepeatMode.ONE:
+                    track = self.playlist.current_track
+                    if track:
+                        self.audio_engine.load(track)
+                        self.audio_engine.play()
     
     # HTTP handlers
     async def _handle_index(self, request: web.Request) -> web.Response:
@@ -152,6 +199,12 @@ class DaemonServer:
             track = extract_metadata(path)
             if not self.audio_engine.load(track):
                 return web.json_response({"error": "Failed to load track"}, status=500)
+            
+            # Update playlist current_index
+            for i, t in enumerate(self.playlist.tracks):
+                if t.path == path:
+                    self.playlist._current_index = i
+                    break
         
         self.audio_engine.play()
         return web.json_response({"status": "playing"})
@@ -396,6 +449,9 @@ class DaemonServer:
         
         # Initialize audio engine
         self.audio_engine.initialize()
+        
+        # Start monitor thread for auto-play next
+        self._start_monitor()
         
         # Setup signal handlers
         def signal_handler(sig, frame):
