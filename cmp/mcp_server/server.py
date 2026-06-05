@@ -1,6 +1,8 @@
 """MCP Server implementation for CLI Music Player."""
 import asyncio
 import logging
+import threading
+import time
 from typing import Any, Optional
 from pathlib import Path
 
@@ -40,7 +42,55 @@ class MusicPlayerMCPServer:
         self.config_manager = config_manager or ConfigManager()
         
         self.server = Server("cmp-music-player")
+        self._track_ended = False
+        self._monitor_thread = None
+        self._running = False
+        
+        # Setup auto-play next track when current track ends
+        self._setup_auto_play_next()
+        
         self._setup_handlers()
+    
+    def _setup_auto_play_next(self):
+        """Setup auto-play next track when current track ends."""
+        def on_track_end():
+            # This runs in the decoder thread
+            # Signal that track ended - the monitor will handle next track
+            self._track_ended = True
+        
+        self.audio_engine.register_end_callback(on_track_end)
+    
+    def _start_monitor(self):
+        """Start the monitor thread for auto-play next track."""
+        self._running = True
+        self._monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
+        self._monitor_thread.start()
+    
+    def _monitor_loop(self):
+        """Monitor thread loop - handles auto-play next track."""
+        while self._running:
+            time.sleep(0.5)
+            
+            if self._track_ended:
+                self._track_ended = False
+                
+                # Handle auto-play next
+                if self.playlist.repeat == RepeatMode.NONE:
+                    if self.playlist.current_index < len(self.playlist) - 1:
+                        track = self.playlist.next()
+                        if track:
+                            self.audio_engine.load(track)
+                            self.audio_engine.play()
+                elif self.playlist.repeat == RepeatMode.ALL:
+                    track = self.playlist.next()
+                    if track:
+                        self.audio_engine.load(track)
+                        self.audio_engine.play()
+                elif self.playlist.repeat == RepeatMode.ONE:
+                    track = self.playlist.current_track
+                    if track:
+                        self.audio_engine.load(track)
+                        self.audio_engine.play()
     
     def _setup_handlers(self):
         """Setup MCP server handlers."""
@@ -520,6 +570,12 @@ class MusicPlayerMCPServer:
     
     async def run(self):
         """Run the MCP server."""
+        # Initialize audio engine
+        self.audio_engine.initialize()
+        
+        # Start monitor thread for auto-play next
+        self._start_monitor()
+        
         async with stdio_server() as (read_stream, write_stream):
             await self.server.run(
                 read_stream,

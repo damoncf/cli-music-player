@@ -10,6 +10,7 @@ from .player.metadata import extract_metadata
 from .config.settings import config_manager
 from .themes.manager import theme_manager
 from .ui.app import MusicPlayerApp
+from .library.cli import library
 
 
 def load_files_to_playlist(playlist: Playlist, paths: list[str]):
@@ -149,6 +150,10 @@ def mcp():
         asyncio.run(server.run())
     except KeyboardInterrupt:
         click.echo("\nMCP server stopped", err=True)
+
+
+# Add library commands
+main.add_command(library)
 
 
 @main.command()
