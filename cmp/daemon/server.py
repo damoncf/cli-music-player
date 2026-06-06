@@ -205,6 +205,11 @@ class DaemonServer:
                 if t.path == path:
                     self.playlist._current_index = i
                     break
+        elif self.audio_engine.current_track is None and self.playlist.tracks:
+            # No path given and nothing loaded — auto-load first playlist track
+            track = self.playlist.tracks[0]
+            self.playlist._current_index = 0
+            self.audio_engine.load(track)
         
         self.audio_engine.play()
         return web.json_response({"status": "playing"})

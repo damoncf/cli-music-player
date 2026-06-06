@@ -1,5 +1,6 @@
 """CLI Music Player - Main entry point."""
 import sys
+import os
 import asyncio
 import click
 from pathlib import Path
@@ -125,16 +126,51 @@ def play(
 @main.command()
 @click.option("--port", "-p", default=8080, type=int, help="Port to listen on")
 @click.option("--host", "-h", default="localhost", help="Host to bind to")
-def daemon(port: int, host: str):
-    """Run as a background daemon with HTTP/WebSocket API."""
+@click.option("--force", "-f", is_flag=True, help="Kill existing process on port before starting")
+def daemon(port: int, host: str, force: bool):
+    """Run as a background daemon with HTTP/WebSocket API.
+    
+    If the port is already in use, automatically tries the next available port.
+    Use --force to kill the existing process on the specified port.
+    """
     from .daemon import run_daemon
     
-    click.echo(f"Starting daemon on http://{host}:{port}")
-    click.echo("Press Ctrl+C to stop")
+    if force:
+        import subprocess
+        import signal as sig
+        try:
+            result = subprocess.run(
+                ["lsof", "-ti", f"tcp:{port}"],
+                capture_output=True, text=True, timeout=5
+            )
+            if result.stdout.strip():
+                for pid in result.stdout.strip().split("\n"):
+                    try:
+                        os.kill(int(pid), sig.SIGKILL)
+                        click.echo(f"Killed process {pid} on port {port}")
+                    except (OSError, ValueError):
+                        pass
+                import time as _time
+                _time.sleep(1)
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
     
-    try:
-        asyncio.run(run_daemon(port=port, host=host))
-    except KeyboardInterrupt:
+    started = False
+    for offset in range(10):
+        actual_port = port + offset
+        try:
+            asyncio.run(run_daemon(port=actual_port, host=host))
+            started = True
+            break
+        except OSError as e:
+            if offset == 0:
+                click.echo(f"Port {actual_port} is in use, trying next...", err=True)
+            if offset == 9:
+                click.echo(f"Error: Could not find an available port after trying {port}-{port+9}", err=True)
+                raise
+            continue
+    
+    if started:
         click.echo("\nDaemon stopped")
 
 
@@ -158,9 +194,9 @@ main.add_command(library)
 
 @main.command()
 @click.argument("command", type=click.Choice(["play", "pause", "stop", "next", "prev", "status", "volume"]))
-@click.option("--path", "-p", default=None, help="Track path (for play command)")
+@click.option("--path", "-p", default=None, help="Track path or directory (for play command)")
 @click.option("--value", "-v", default=None, type=int, help="Value (for volume command)")
-@click.option("--port", default=8080, type=int, help="Daemon port")
+@click.option("--port", default=8766, type=int, help="Daemon port (default: 8766)")
 def client(command: str, path: str | None, value: int | None, port: int):
     """Control a running daemon instance."""
     import aiohttp
@@ -172,9 +208,20 @@ def client(command: str, path: str | None, value: int | None, port: int):
         async with aiohttp.ClientSession() as session:
             if command == "play":
                 if path:
-                    async with session.post(f"{base_url}/api/play", 
-                                          json={"path": path}) as resp:
-                        data = await resp.json()
+                    p = Path(path).expanduser().resolve()
+                    if p.is_dir():
+                        # Directory: add to playlist first, then play
+                        async with session.post(f"{base_url}/api/playlist/add",
+                                              json={"paths": [str(p)], "recursive": True}) as resp:
+                            add_data = await resp.json()
+                        click.echo(f"Added {add_data.get('added', 0)} tracks from {p.name}")
+                        async with session.post(f"{base_url}/api/play") as play_resp:
+                            data = await play_resp.json()
+                    else:
+                        # Single file: play directly
+                        async with session.post(f"{base_url}/api/play",
+                                              json={"path": str(p)}) as resp:
+                            data = await resp.json()
                 else:
                     async with session.post(f"{base_url}/api/play") as resp:
                         data = await resp.json()
@@ -197,7 +244,7 @@ def client(command: str, path: str | None, value: int | None, port: int):
                 if value is None:
                     click.echo("Error: --value required for volume command", err=True)
                     return
-                async with session.post(f"{base_url}/api/volume", 
+                async with session.post(f"{base_url}/api/volume",
                                       json={"volume": value}) as resp:
                     data = await resp.json()
             
@@ -205,6 +252,10 @@ def client(command: str, path: str | None, value: int | None, port: int):
     
     try:
         asyncio.run(send_request())
+    except aiohttp.client_exceptions.ClientConnectorError:
+        click.echo(f"Error: Daemon not running on port {port}", err=True)
+        click.echo(f"Start it with:  music daemon --port {port}", err=True)
+        click.echo(f"Or in xigua-agent TUI type:  /mcp connect", err=True)
     except Exception as e:
         click.echo(f"Error connecting to daemon: {e}", err=True)
         click.echo(f"Make sure daemon is running on port {port}", err=True)
