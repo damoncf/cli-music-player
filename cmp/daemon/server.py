@@ -2,6 +2,7 @@
 import asyncio
 import json
 import logging
+import os
 import threading
 import time
 from typing import Optional, Callable, Any
@@ -10,6 +11,7 @@ from datetime import datetime
 import signal
 import sys
 
+import click
 from aiohttp import web, WSMsgType
 
 from ..player.engine import AudioEngine, Track, PlaybackState
@@ -489,17 +491,91 @@ class DaemonServer:
         self._running = False
 
 
+# ── PID file lock (single instance guard) ──────────────────────────
+
+PID_DIR = Path.home() / ".config" / "music"
+PID_FILE = PID_DIR / "daemon.pid"
+
+
+def _acquire_pid_lock(port: int) -> bool:
+    """Acquire a PID file lock.
+    
+    Returns True if this instance should continue, False if another
+    instance is already running (caller should exit).
+    """
+    PID_DIR.mkdir(parents=True, exist_ok=True)
+
+    if PID_FILE.exists():
+        try:
+            data = PID_FILE.read_text().strip().split(":")
+            old_pid = int(data[0])
+            old_port = int(data[1]) if len(data) > 1 else 0
+        except (ValueError, OSError):
+            old_pid = 0
+            old_port = 0
+
+        if old_pid:
+            try:
+                # Check if the old process is still alive
+                os.kill(old_pid, 0)
+                # Process exists → another instance is running
+                click.echo(
+                    f"Error: daemon already running on port {old_port} (PID {old_pid}).\n"
+                    f"  Use --force to kill it first, or stop it with:\n"
+                    f"    kill {old_pid}",
+                    err=True,
+                )
+                return False
+            except OSError:
+                # Stale PID file → remove it
+                PID_FILE.unlink(missing_ok=True)
+
+    # Write our PID and port
+    PID_FILE.write_text(f"{os.getpid()}:{port}")
+    return True
+
+
+def _release_pid_lock():
+    """Remove the PID file lock (only if it belongs to us)."""
+    if PID_FILE.exists():
+        try:
+            old_pid = int(PID_FILE.read_text().strip().split(":")[0])
+            if old_pid == os.getpid():
+                PID_FILE.unlink(missing_ok=True)
+        except (ValueError, OSError):
+            pass
+
+
 async def run_daemon(
     port: int = 8080,
     host: str = "localhost",
     audio_engine: Optional[AudioEngine] = None,
     playlist: Optional[Playlist] = None,
 ):
-    """Run the daemon server."""
+    """Run the daemon server.
+    
+    Only one instance is allowed at a time.  If another instance is
+    already running (detected via PID file), this function prints an
+    error and returns immediately.
+    """
+    if not _acquire_pid_lock(port):
+        return
+
     server = DaemonServer(
         audio_engine=audio_engine,
         playlist=playlist,
         port=port,
         host=host,
     )
+
+    # Intercept DaemonServer.start() cleanup to release the PID lock
+    original_start = server.start
+
+    async def start_with_cleanup():
+        try:
+            await original_start()
+        finally:
+            _release_pid_lock()
+
+    server.start = start_with_cleanup
     await server.start()

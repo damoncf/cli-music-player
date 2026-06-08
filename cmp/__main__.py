@@ -124,20 +124,38 @@ def play(
 
 
 @main.command()
-@click.option("--port", "-p", default=8080, type=int, help="Port to listen on")
+@click.option("--port", "-p", default=8766, type=int, help="Port to listen on")
 @click.option("--host", "-h", default="localhost", help="Host to bind to")
-@click.option("--force", "-f", is_flag=True, help="Kill existing process on port before starting")
+@click.option("--force", "-f", is_flag=True, help="Kill existing daemon instance before starting")
 def daemon(port: int, host: str, force: bool):
     """Run as a background daemon with HTTP/WebSocket API.
     
-    If the port is already in use, automatically tries the next available port.
-    Use --force to kill the existing process on the specified port.
+    Only one daemon instance is allowed at a time (enforced by PID file).
+    Use --force to kill the running instance on the specified port and restart.
     """
-    from .daemon import run_daemon
+    from .daemon import run_daemon, _release_pid_lock
+    import subprocess
+    import signal as sig
     
     if force:
-        import subprocess
-        import signal as sig
+        # Read PID from daemon PID file if it exists
+        from .daemon.server import PID_FILE
+        if PID_FILE.exists():
+            try:
+                data = PID_FILE.read_text().strip().split(":")
+                old_pid = int(data[0])
+                try:
+                    os.kill(int(old_pid), sig.SIGKILL)
+                    click.echo(f"Killed existing daemon (PID {old_pid})")
+                except (OSError, ValueError):
+                    pass
+                _release_pid_lock()
+                import time as _time
+                _time.sleep(1)
+            except (ValueError, OSError):
+                pass
+        
+        # Also kill anything listening on the port
         try:
             result = subprocess.run(
                 ["lsof", "-ti", f"tcp:{port}"],
@@ -147,7 +165,6 @@ def daemon(port: int, host: str, force: bool):
                 for pid in result.stdout.strip().split("\n"):
                     try:
                         os.kill(int(pid), sig.SIGKILL)
-                        click.echo(f"Killed process {pid} on port {port}")
                     except (OSError, ValueError):
                         pass
                 import time as _time
@@ -155,23 +172,14 @@ def daemon(port: int, host: str, force: bool):
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
     
-    started = False
-    for offset in range(10):
-        actual_port = port + offset
-        try:
-            asyncio.run(run_daemon(port=actual_port, host=host))
-            started = True
-            break
-        except OSError as e:
-            if offset == 0:
-                click.echo(f"Port {actual_port} is in use, trying next...", err=True)
-            if offset == 9:
-                click.echo(f"Error: Could not find an available port after trying {port}-{port+9}", err=True)
-                raise
-            continue
+    try:
+        asyncio.run(run_daemon(port=port, host=host))
+    except OSError as e:
+        click.echo(f"Error: Port {port} is in use.\n"
+                   f"  Use --force to kill the existing process on that port.", err=True)
+        raise SystemExit(1)
     
-    if started:
-        click.echo("\nDaemon stopped")
+    click.echo("\nDaemon stopped")
 
 
 @main.command()
