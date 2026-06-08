@@ -231,8 +231,7 @@ class DaemonServer:
         track = self.playlist.next()
         if track:
             self.audio_engine.load(track)
-            if self.audio_engine.state == PlaybackState.PLAYING:
-                self.audio_engine.play()
+            self.audio_engine.play()
             return web.json_response({"track": track.title})
         return web.json_response({"error": "No next track"}, status=404)
     
@@ -241,8 +240,7 @@ class DaemonServer:
         track = self.playlist.previous()
         if track:
             self.audio_engine.load(track)
-            if self.audio_engine.state == PlaybackState.PLAYING:
-                self.audio_engine.play()
+            self.audio_engine.play()
             return web.json_response({"track": track.title})
         return web.json_response({"error": "No previous track"}, status=404)
     
@@ -344,8 +342,7 @@ class DaemonServer:
         track = self.playlist.select(index)
         if track:
             self.audio_engine.load(track)
-            if self.audio_engine.state == PlaybackState.PLAYING:
-                self.audio_engine.play()
+            self.audio_engine.play()
             return web.json_response({"track": track.title})
         
         return web.json_response({"error": "Invalid index"}, status=404)
